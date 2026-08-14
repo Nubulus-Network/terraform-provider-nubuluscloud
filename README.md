@@ -133,5 +133,10 @@ so refreshing one reads the zone and filters. The read is cached on the server, 
 an HTTP request rather than a zone transfer, but it is why a configuration with many record
 sets makes many small requests.
 
+**Record names whose first label starts with an underscore are rejected.** That covers
+`_dmarc`, `_domainkey` (DKIM), `_acme-challenge` and every SRV record. The limit is in the
+API, not in Terraform, and it is being lifted; until then those records have to be managed
+elsewhere.
+
 **Verifying an external zone is not covered by the acceptance tests.** It needs a TXT record
 published in DNS this provider does not manage, which no test can arrange.
