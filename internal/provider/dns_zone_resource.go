@@ -283,9 +283,34 @@ func applyZoneDetail(model *dnsZoneResourceModel, detail *nubulus.ZoneDetail) {
 		}
 	} else {
 		model.VerificationRequired = types.BoolValue(false)
-		model.VerificationTXTHost = types.StringNull()
-		model.VerificationTXTValue = types.StringNull()
+		// THE CHALLENGE IS NOT BLANKED ONCE IT HAS BEEN KNOWN, and this is not
+		// cosmetic: it is what keeps the documented flow working after it has
+		// worked.
+		//
+		// The API stops reporting the challenge the moment there is nothing
+		// left to prove, so a verified zone reports none. But the pattern this
+		// provider tells people to write publishes the challenge with
+		// `values = ["\"${...verification_txt_value}\""]`, and Terraform
+		// evaluates that expression on every later plan — including the destroy.
+		// Letting the attribute fall back to null turns every subsequent
+		// command into "Invalid template interpolation value: the expression
+		// result is null", with no way out except editing the configuration
+		// that just worked.
+		//
+		// The token itself does not change and is still held server-side, so
+		// keeping the known value is also the truthful thing to report.
+		model.VerificationTXTHost = keepKnown(model.VerificationTXTHost)
+		model.VerificationTXTValue = keepKnown(model.VerificationTXTValue)
 	}
 
 	model.Nameservers = stringList(nameservers)
+}
+
+// keepKnown preserves a value already in state when the API stops reporting it.
+// An unknown (a fresh plan) or an absent one stays null.
+func keepKnown(prior types.String) types.String {
+	if prior.IsUnknown() || prior.IsNull() {
+		return types.StringNull()
+	}
+	return prior
 }
