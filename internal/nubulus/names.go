@@ -23,6 +23,23 @@ import (
 // reverse zones are ordinary zones.
 var labelRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 
+// recordLabelRe is labelRe plus the leading underscore RFC 8552 reserves for
+// service discovery: `_dmarc`, `_acme-challenge`, the `_domainkey` of every DKIM
+// key, the `_sip._tcp` of every SRV.
+//
+// It applies to the name of a record and never to the name of a zone. A zone is
+// registered and delegated as a hostname-shaped name, where RFC 1123 is the
+// right rule; a record name is any name that can appear in the DNS. The
+// underscore is only ever the first character of a label — RFC 8552 defines
+// these as a prefix on an otherwise ordinary name, not as a character that
+// became legal everywhere.
+var recordLabelRe = regexp.MustCompile(`^_?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
+
+// maxLabelLen is the DNS limit on one label, in octets. labelRe encodes it on
+// its own; recordLabelRe would allow 64 with the underscore in front, so the
+// bound is checked separately.
+const maxLabelLen = 63
+
 // NormalizeZoneName lowercases and trims a zone name and reports whether it is
 // a plausible one. The result carries no trailing dot, which is how zone names
 // are spelled everywhere except inside an RRset.
@@ -40,11 +57,35 @@ func NormalizeZoneName(raw string) (string, bool) {
 		return "", false
 	}
 	for _, l := range labels {
-		if !labelRe.MatchString(l) {
+		if len(l) > maxLabelLen || !labelRe.MatchString(l) {
 			return "", false
 		}
 	}
 	return name, true
+}
+
+// validRecordName reports whether every label of an already-qualified owner name
+// is one a record may carry. It is NormalizeZoneName's loop with recordLabelRe
+// in place of labelRe, and it exists so that the difference between what a zone
+// may be called and what a record may be called is exactly one regexp.
+func validRecordName(name string) bool {
+	trimmed := strings.TrimSuffix(name, ".")
+	if trimmed == "" || len(trimmed) > 253 {
+		return false
+	}
+	if strings.ContainsAny(trimmed, "/:@ ") {
+		return false
+	}
+	labels := strings.Split(trimmed, ".")
+	if len(labels) < 2 {
+		return false
+	}
+	for _, l := range labels {
+		if len(l) > maxLabelLen || !recordLabelRe.MatchString(l) {
+			return false
+		}
+	}
+	return true
 }
 
 // NormalizeOwnerName lowercases an owner name and gives it the trailing dot.
@@ -113,9 +154,11 @@ func QualifyName(name, zone string) (string, bool) {
 	}
 
 	// The labels are validated with the wildcard taken off first: "*" is not an
-	// RFC 1123 label and is nonetheless exactly what a wildcard record is.
+	// RFC 1123 label and is nonetheless exactly what a wildcard record is. And
+	// they are validated as a *record* name, which is why `_dmarc` and
+	// `*._domainkey` pass here and would not pass as a zone name.
 	check := strings.TrimPrefix(qualified, "*.")
-	if _, ok := NormalizeZoneName(strings.TrimSuffix(check, ".")); !ok {
+	if !validRecordName(check) {
 		return "", false
 	}
 
