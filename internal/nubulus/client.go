@@ -116,9 +116,23 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 			// failure is logged nowhere the user will look.
 			AuthStyle: oauth2.AuthStyleInParams,
 		}
-		httpClient = oauthCfg.Client(context.WithValue(ctx, oauth2.HTTPClient, &http.Client{
+		// THE TOKEN SOURCE MUST NOT CAPTURE THIS CONTEXT'S CANCELLATION, and
+		// getting that wrong looks like a network fault rather than a bug.
+		//
+		// oauth2 keeps the context it is built with and reuses it for every
+		// token fetch, but the one handed to the provider is cancelled the
+		// moment configuration returns — long before the first resource asks
+		// for anything. The result is every single call failing with "context
+		// canceled" on the *token endpoint*, which reads as "the identity
+		// provider is unreachable" and sends you to check DNS and firewalls.
+		//
+		// WithoutCancel keeps the values and drops the cancellation, which is
+		// exactly the half that is wanted here. Per-request deadlines still
+		// apply: those come from the request context, not from this one.
+		tokenCtx := context.WithValue(context.WithoutCancel(ctx), oauth2.HTTPClient, &http.Client{
 			Timeout: 30 * time.Second,
-		}))
+		})
+		httpClient = oauthCfg.Client(tokenCtx)
 		httpClient.Timeout = 60 * time.Second
 	}
 
