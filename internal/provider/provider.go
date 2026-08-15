@@ -25,14 +25,14 @@ type NubulusProvider struct {
 }
 
 // NubulusProviderModel is the provider block.
+//
+// Every field here needs a matching attribute in the schema below: a `tfsdk`
+// tag with nothing to read into it fails when the configuration is read, on the
+// first real command. TestProviderSchemaAndModelAgree is what keeps the two in
+// step.
 type NubulusProviderModel struct {
 	ClientID     types.String `tfsdk:"client_id"`
 	ClientSecret types.String `tfsdk:"client_secret"`
-	TokenURL     types.String `tfsdk:"token_url"`
-	ProjectID    types.String `tfsdk:"project_id"`
-
-	DNSEndpoint    types.String `tfsdk:"dns_endpoint"`
-	TunnelEndpoint types.String `tfsdk:"tunnel_endpoint"`
 }
 
 func New(version string) func() provider.Provider {
@@ -65,27 +65,6 @@ func (p *NubulusProvider) Schema(ctx context.Context, req provider.SchemaRequest
 				Optional:  true,
 				Sensitive: true,
 			},
-			"token_url": schema.StringAttribute{
-				MarkdownDescription: "OAuth2 token endpoint. Defaults to `" + nubulus.DefaultTokenURL +
-					"`. May also be set with `NUBULUS_TOKEN_URL`.",
-				Optional: true,
-			},
-			"project_id": schema.StringAttribute{
-				MarkdownDescription: "Project the access token is scoped to, which becomes its " +
-					"audience. Defaults to `" + nubulus.DefaultProjectID + "`. May also be set with " +
-					"`NUBULUS_PROJECT_ID`.",
-				Optional: true,
-			},
-			"dns_endpoint": schema.StringAttribute{
-				MarkdownDescription: "Base URL of the DNS API. Defaults to `" + nubulus.DefaultDNSEndpoint +
-					"`. May also be set with `NUBULUS_DNS_ENDPOINT`.",
-				Optional: true,
-			},
-			"tunnel_endpoint": schema.StringAttribute{
-				MarkdownDescription: "Base URL of the tunnel API. Defaults to `" + nubulus.DefaultTunnelEndpoint +
-					"`. May also be set with `NUBULUS_TUNNEL_ENDPOINT`.",
-				Optional: true,
-			},
 		},
 	}
 }
@@ -101,12 +80,8 @@ func (p *NubulusProvider) Configure(ctx context.Context, req provider.ConfigureR
 	// the provider cannot be configured during plan. Saying which attribute it
 	// was is the difference between a fixable message and a puzzle.
 	for name, value := range map[string]types.String{
-		"client_id":       config.ClientID,
-		"client_secret":   config.ClientSecret,
-		"token_url":       config.TokenURL,
-		"project_id":      config.ProjectID,
-		"dns_endpoint":    config.DNSEndpoint,
-		"tunnel_endpoint": config.TunnelEndpoint,
+		"client_id":     config.ClientID,
+		"client_secret": config.ClientSecret,
 	} {
 		if value.IsUnknown() {
 			resp.Diagnostics.AddAttributeError(
@@ -121,15 +96,7 @@ func (p *NubulusProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-	cfg := nubulus.Config{
-		ClientID:       firstSet(config.ClientID, "NUBULUS_CLIENT_ID"),
-		ClientSecret:   firstSet(config.ClientSecret, "NUBULUS_CLIENT_SECRET"),
-		TokenURL:       firstSet(config.TokenURL, "NUBULUS_TOKEN_URL"),
-		ProjectID:      firstSet(config.ProjectID, "NUBULUS_PROJECT_ID"),
-		DNSEndpoint:    firstSet(config.DNSEndpoint, "NUBULUS_DNS_ENDPOINT"),
-		TunnelEndpoint: firstSet(config.TunnelEndpoint, "NUBULUS_TUNNEL_ENDPOINT"),
-		UserAgent:      "terraform-provider-nubuluscloud/" + p.version,
-	}
+	cfg := clientConfig(config, p.version)
 
 	if cfg.ClientID == "" {
 		resp.Diagnostics.AddAttributeError(
@@ -174,6 +141,32 @@ func (p *NubulusProvider) DataSources(ctx context.Context) []func() datasource.D
 	return []func() datasource.DataSource{
 		NewDNSZoneDataSource,
 		NewDNSZonesDataSource,
+	}
+}
+
+// clientConfig assembles what the client is built from: the credential, which
+// the configuration may carry, and the platform values, which it may not.
+//
+// The token endpoint, the project and the two API endpoints describe a hosted
+// service rather than a preference of whoever writes the configuration — there
+// is one production, and no other value for them is useful against it. So they
+// are not attributes of the provider block. That matters most for the token
+// endpoint, which is where the client id and secret are sent: a configuration
+// file cannot redirect them anywhere.
+//
+// They are still read from the environment, which keeps a build usable against
+// a test or staging environment without cutting a release, and the compiled-in
+// defaults in nubulus.New fill in whatever arrives empty. If one of them has to
+// change for good, that is a new version of the provider.
+func clientConfig(config NubulusProviderModel, version string) nubulus.Config {
+	return nubulus.Config{
+		ClientID:       firstSet(config.ClientID, "NUBULUS_CLIENT_ID"),
+		ClientSecret:   firstSet(config.ClientSecret, "NUBULUS_CLIENT_SECRET"),
+		TokenURL:       os.Getenv("NUBULUS_TOKEN_URL"),
+		ProjectID:      os.Getenv("NUBULUS_PROJECT_ID"),
+		DNSEndpoint:    os.Getenv("NUBULUS_DNS_ENDPOINT"),
+		TunnelEndpoint: os.Getenv("NUBULUS_TUNNEL_ENDPOINT"),
+		UserAgent:      "terraform-provider-nubuluscloud/" + version,
 	}
 }
 

@@ -190,8 +190,8 @@ func Explain(action string, err error) (summary, detail string) {
 	var transportErr *TransportError
 	if errors.As(err, &transportErr) {
 		return summary, fmt.Sprintf(
-			"%s\n\nThe endpoint did not answer at all. Check that the URL in the provider block is "+
-				"reachable from the machine running Terraform.", transportErr.Error())
+			"%s\n\nThe endpoint did not answer at all. Check that it is reachable from the machine "+
+				"running Terraform.", transportErr.Error())
 	}
 
 	var apiErr *APIError
@@ -205,8 +205,8 @@ func Explain(action string, err error) (summary, detail string) {
 			"This is almost always the token and not the permissions: an application token only " +
 			"carries a role claim when it was requested with the scope\n\n" +
 			"    urn:zitadel:iam:org:projects:roles\n\n" +
-			"(\"projects\", plural). The provider asks for it; a token fetched by hand, or one whose " +
-			"project_id does not match the platform's, will not have it."
+			"(\"projects\", plural). The provider asks for it; a token fetched by hand, or one " +
+			"requested against a different project, will not have it."
 
 	case apiErr.Code == CodeNoAccount:
 		return summary, apiErr.Error() + "\n\n" +
@@ -244,8 +244,7 @@ func Explain(action string, err error) (summary, detail string) {
 	case apiErr.Status == http.StatusForbidden && apiErr.Code == "":
 		return summary, apiErr.Error() + "\n\n" +
 			"A 403 carrying no error code did not come from the API: something between Terraform " +
-			"and it refused the request. Check the endpoint in the provider block and whether the " +
-			"network Terraform runs on can reach it."
+			"and it refused the request. Check whether the network Terraform runs on can reach it."
 
 	case apiErr.Status == http.StatusForbidden:
 		return summary, apiErr.Error() + "\n\n" +

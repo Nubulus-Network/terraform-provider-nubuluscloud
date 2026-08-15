@@ -22,7 +22,9 @@ import (
 
 // The defaults of every endpoint the provider talks to. They are values rather
 // than constants baked into the request builders so that a second instance —
-// a staging identity provider, a local API — is a provider block and not a release.
+// a staging identity provider, a local API — is an environment variable and not
+// a release. They are not configurable from a Terraform configuration: see
+// clientConfig in internal/provider.
 const (
 	DefaultTokenURL       = "https://idp.nubulusnetwork.es/oauth/v2/token"
 	DefaultDNSEndpoint    = "https://dns.api.nubulusnetwork.es"
@@ -62,7 +64,7 @@ func Scopes(projectID string) []string {
 	}
 }
 
-// Config is everything the provider block can say.
+// Config is everything the client is built from.
 type Config struct {
 	ClientID     string
 	ClientSecret string

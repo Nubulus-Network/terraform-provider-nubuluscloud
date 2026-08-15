@@ -1,17 +1,27 @@
 ## Unreleased
 
+BREAKING CHANGES:
+
+* provider: `token_url`, `project_id`, `dns_endpoint` and `tunnel_endpoint` are
+  no longer arguments of the `provider` block. They describe a hosted service
+  rather than a preference — there is one production, and no other value for
+  them is useful against it — and `token_url` in particular is where the client
+  id and secret are sent, so a configuration file no longer gets to redirect
+  them. A configuration that sets any of the four now fails with "Unsupported
+  argument"; remove the line. The four are still read from `NUBULUS_TOKEN_URL`,
+  `NUBULUS_PROJECT_ID`, `NUBULUS_DNS_ENDPOINT` and `NUBULUS_TUNNEL_ENDPOINT`,
+  which is what points a build at a test environment; unset, the compiled-in
+  defaults apply as before. The provider block now takes `client_id` and
+  `client_secret` and nothing else.
+
 NOTES:
 
 * Groundwork for the tunnel resources: the provider now carries a typed client
-  for the tunnel API and a `tunnel_endpoint` attribute. No resource or data
-  source uses either of them yet, so this release changes nothing that can be
-  written in a configuration.
+  for the tunnel API. No resource or data source uses it yet, so nothing that
+  can be written in a configuration gains anything from it.
 
 ENHANCEMENTS:
 
-* provider: new optional `tunnel_endpoint` attribute, defaulting to the public
-  tunnel API and also readable from `NUBULUS_TUNNEL_ENDPOINT`, alongside the
-  existing `dns_endpoint`.
 * Errors are now explained by the code the API returns rather than by the HTTP
   status where the two disagree, which is what lets a malformed request be
   reported as one whatever status it arrives with.

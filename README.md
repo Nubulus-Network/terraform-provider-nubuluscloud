@@ -40,15 +40,19 @@ export NUBULUS_CLIENT_ID=...
 export NUBULUS_CLIENT_SECRET=...
 ```
 
-Both can also be set in the provider block, and everything else has a default:
+Both can also be written in the provider block, and they are the only two things it takes:
 
-| Attribute | Environment | Default |
-|---|---|---|
-| `client_id` | `NUBULUS_CLIENT_ID` | — |
-| `client_secret` | `NUBULUS_CLIENT_SECRET` | — |
-| `token_url` | `NUBULUS_TOKEN_URL` | `https://idp.nubulusnetwork.es/oauth/v2/token` |
-| `project_id` | `NUBULUS_PROJECT_ID` | the platform's Zitadel project |
-| `dns_endpoint` | `NUBULUS_DNS_ENDPOINT` | `https://dns.api.nubulusnetwork.es` |
+| Attribute | Environment |
+|---|---|
+| `client_id` | `NUBULUS_CLIENT_ID` |
+| `client_secret` | `NUBULUS_CLIENT_SECRET` |
+
+Everything else — the token endpoint the credential is sent to, the project the access token
+is scoped to and the API endpoints — describes a hosted service rather than a preference, so
+it is not an argument of the provider block and a configuration cannot name it. The values
+are compiled in; a build can still be pointed at another environment with
+`NUBULUS_TOKEN_URL`, `NUBULUS_PROJECT_ID`, `NUBULUS_DNS_ENDPOINT` and
+`NUBULUS_TUNNEL_ENDPOINT`, which exist for testing.
 
 A personal access token from the identity provider **cannot** be used instead, and it is not
 a matter of permissions: a PAT is an encrypted token the services cannot parse, and it is
