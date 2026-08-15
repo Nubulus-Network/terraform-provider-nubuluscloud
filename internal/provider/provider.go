@@ -31,7 +31,8 @@ type NubulusProviderModel struct {
 	TokenURL     types.String `tfsdk:"token_url"`
 	ProjectID    types.String `tfsdk:"project_id"`
 
-	DNSEndpoint types.String `tfsdk:"dns_endpoint"`
+	DNSEndpoint    types.String `tfsdk:"dns_endpoint"`
+	TunnelEndpoint types.String `tfsdk:"tunnel_endpoint"`
 }
 
 func New(version string) func() provider.Provider {
@@ -80,6 +81,11 @@ func (p *NubulusProvider) Schema(ctx context.Context, req provider.SchemaRequest
 					"`. May also be set with `NUBULUS_DNS_ENDPOINT`.",
 				Optional: true,
 			},
+			"tunnel_endpoint": schema.StringAttribute{
+				MarkdownDescription: "Base URL of the tunnel API. Defaults to `" + nubulus.DefaultTunnelEndpoint +
+					"`. May also be set with `NUBULUS_TUNNEL_ENDPOINT`.",
+				Optional: true,
+			},
 		},
 	}
 }
@@ -95,11 +101,12 @@ func (p *NubulusProvider) Configure(ctx context.Context, req provider.ConfigureR
 	// the provider cannot be configured during plan. Saying which attribute it
 	// was is the difference between a fixable message and a puzzle.
 	for name, value := range map[string]types.String{
-		"client_id":     config.ClientID,
-		"client_secret": config.ClientSecret,
-		"token_url":     config.TokenURL,
-		"project_id":    config.ProjectID,
-		"dns_endpoint":  config.DNSEndpoint,
+		"client_id":       config.ClientID,
+		"client_secret":   config.ClientSecret,
+		"token_url":       config.TokenURL,
+		"project_id":      config.ProjectID,
+		"dns_endpoint":    config.DNSEndpoint,
+		"tunnel_endpoint": config.TunnelEndpoint,
 	} {
 		if value.IsUnknown() {
 			resp.Diagnostics.AddAttributeError(
@@ -115,12 +122,13 @@ func (p *NubulusProvider) Configure(ctx context.Context, req provider.ConfigureR
 	}
 
 	cfg := nubulus.Config{
-		ClientID:     firstSet(config.ClientID, "NUBULUS_CLIENT_ID"),
-		ClientSecret: firstSet(config.ClientSecret, "NUBULUS_CLIENT_SECRET"),
-		TokenURL:     firstSet(config.TokenURL, "NUBULUS_TOKEN_URL"),
-		ProjectID:    firstSet(config.ProjectID, "NUBULUS_PROJECT_ID"),
-		DNSEndpoint:  firstSet(config.DNSEndpoint, "NUBULUS_DNS_ENDPOINT"),
-		UserAgent:    "terraform-provider-nubuluscloud/" + p.version,
+		ClientID:       firstSet(config.ClientID, "NUBULUS_CLIENT_ID"),
+		ClientSecret:   firstSet(config.ClientSecret, "NUBULUS_CLIENT_SECRET"),
+		TokenURL:       firstSet(config.TokenURL, "NUBULUS_TOKEN_URL"),
+		ProjectID:      firstSet(config.ProjectID, "NUBULUS_PROJECT_ID"),
+		DNSEndpoint:    firstSet(config.DNSEndpoint, "NUBULUS_DNS_ENDPOINT"),
+		TunnelEndpoint: firstSet(config.TunnelEndpoint, "NUBULUS_TUNNEL_ENDPOINT"),
+		UserAgent:      "terraform-provider-nubuluscloud/" + p.version,
 	}
 
 	if cfg.ClientID == "" {

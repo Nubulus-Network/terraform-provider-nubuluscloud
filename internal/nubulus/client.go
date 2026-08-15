@@ -24,8 +24,9 @@ import (
 // than constants baked into the request builders so that a second instance —
 // a staging identity provider, a local API — is a provider block and not a release.
 const (
-	DefaultTokenURL    = "https://idp.nubulusnetwork.es/oauth/v2/token"
-	DefaultDNSEndpoint = "https://dns.api.nubulusnetwork.es"
+	DefaultTokenURL       = "https://idp.nubulusnetwork.es/oauth/v2/token"
+	DefaultDNSEndpoint    = "https://dns.api.nubulusnetwork.es"
+	DefaultTunnelEndpoint = "https://tunel.api.nubulusnetwork.es"
 
 	// DefaultProjectID is the project the access token is scoped to. It is what
 	// the audience scope below is built from, and it is the same value that
@@ -68,7 +69,8 @@ type Config struct {
 	TokenURL     string
 	ProjectID    string
 
-	DNSEndpoint string
+	DNSEndpoint    string
+	TunnelEndpoint string
 
 	UserAgent string
 
@@ -84,6 +86,8 @@ type Client struct {
 	// DNS is the DNS API. It is public because a nil check on it is how a
 	// resource would notice a misconfigured provider.
 	DNS *DNSClient
+	// Tunnel is the tunnel API, behind the same authenticated transport.
+	Tunnel *TunnelClient
 }
 
 // New builds the client, minting nothing: the first token is fetched lazily by
@@ -99,6 +103,9 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 	}
 	if cfg.DNSEndpoint == "" {
 		cfg.DNSEndpoint = DefaultDNSEndpoint
+	}
+	if cfg.TunnelEndpoint == "" {
+		cfg.TunnelEndpoint = DefaultTunnelEndpoint
 	}
 
 	httpClient := cfg.HTTPClient
@@ -139,6 +146,11 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 	return &Client{
 		DNS: &DNSClient{service: service{
 			base:      strings.TrimSuffix(cfg.DNSEndpoint, "/"),
+			http:      httpClient,
+			userAgent: cfg.UserAgent,
+		}},
+		Tunnel: &TunnelClient{service: service{
+			base:      strings.TrimSuffix(cfg.TunnelEndpoint, "/"),
 			http:      httpClient,
 			userAgent: cfg.UserAgent,
 		}},

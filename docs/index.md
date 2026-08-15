@@ -39,3 +39,4 @@ provider "nubuluscloud" {}
 - `dns_endpoint` (String) Base URL of the DNS API. Defaults to `https://dns.api.nubulusnetwork.es`. May also be set with `NUBULUS_DNS_ENDPOINT`.
 - `project_id` (String) Project the access token is scoped to, which becomes its audience. Defaults to `385111705782321341`. May also be set with `NUBULUS_PROJECT_ID`.
 - `token_url` (String) OAuth2 token endpoint. Defaults to `https://idp.nubulusnetwork.es/oauth/v2/token`. May also be set with `NUBULUS_TOKEN_URL`.
+- `tunnel_endpoint` (String) Base URL of the tunnel API. Defaults to `https://tunel.api.nubulusnetwork.es`. May also be set with `NUBULUS_TUNNEL_ENDPOINT`.

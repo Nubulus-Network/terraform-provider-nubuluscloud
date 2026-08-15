@@ -1,3 +1,21 @@
+## Unreleased
+
+NOTES:
+
+* Groundwork for the tunnel resources: the provider now carries a typed client
+  for the tunnel API and a `tunnel_endpoint` attribute. No resource or data
+  source uses either of them yet, so this release changes nothing that can be
+  written in a configuration.
+
+ENHANCEMENTS:
+
+* provider: new optional `tunnel_endpoint` attribute, defaulting to the public
+  tunnel API and also readable from `NUBULUS_TUNNEL_ENDPOINT`, alongside the
+  existing `dns_endpoint`.
+* Errors are now explained by the code the API returns rather than by the HTTP
+  status where the two disagree, which is what lets a malformed request be
+  reported as one whatever status it arrives with.
+
 ## 0.1.1 (14 de agosto de 2026)
 
 BUG FIXES:

@@ -17,8 +17,9 @@ func newTestClient(t *testing.T, handler http.Handler) *Client {
 	t.Cleanup(server.Close)
 
 	client, err := New(context.Background(), Config{
-		DNSEndpoint: server.URL,
-		HTTPClient:  server.Client(),
+		DNSEndpoint:    server.URL,
+		TunnelEndpoint: server.URL,
+		HTTPClient:     server.Client(),
 	})
 	if err != nil {
 		t.Fatalf("New: %v", err)
