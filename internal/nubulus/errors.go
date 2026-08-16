@@ -33,6 +33,37 @@ const (
 	CodeNotFound = "NOT_FOUND"
 )
 
+// The codes of the tunnel API, which are matched by NAME and never by status.
+//
+// That is not a stylistic preference. Some of these currently come back with a
+// 5xx even though every one of them is the caller's mistake or the caller's
+// state: the classification of the code into a status is being corrected, and
+// the provider has to behave the same before and after that lands. The code in
+// the body is what has always been right, and it is what consumers are expected
+// to read.
+//
+// A second reason to prefer the code even once the statuses are fixed: two
+// unrelated failures share a status. A 409 is a lost write race on a DNS record
+// set and a hostname claimed elsewhere on a route, and the advice for them is
+// opposite.
+const (
+	// CodeInvalidInput is a malformed request: a port out of range, a hostname
+	// that is not an FQDN, a path prefix that does not start with a slash.
+	// Retrying it unchanged never helps.
+	CodeInvalidInput = "INVALID_INPUT"
+	// CodeHostnameConflict is a route hostname already in use by another
+	// account. Hostnames are unique across the whole platform, so this is not
+	// something the account that hits it can inspect or resolve on its own.
+	CodeHostnameConflict = "HOSTNAME_CONFLICT"
+	// CodeQuotaExceeded is the limit on how many tunnels an account may have.
+	// Unlike the others it lifts on its own once something is deleted.
+	CodeQuotaExceeded = "QUOTA_EXCEEDED"
+	// CodeTunnelInactive is any operation on a tunnel that is not active.
+	// Routes exist only inside an active tunnel, and retrying will not change
+	// that until the tunnel itself does.
+	CodeTunnelInactive = "TUNNEL_INACTIVE"
+)
+
 // APIError is a 4xx or 5xx with the service's own code and message.
 type APIError struct {
 	Status  int
@@ -147,14 +178,20 @@ func IsLostRace(err error) bool {
 //     the cause in the credential is looking in the wrong place.
 //
 // Everything else falls through with the service's own words, which are good.
+//
+// The cases that match on a CODE come first, and must keep coming first. Two
+// failures with nothing in common share a status often enough that deciding on
+// the status alone gets one of the pair wrong, and a code that arrives with the
+// wrong status — which happens today for several of the tunnel ones — would
+// otherwise be explained as whatever that status usually means.
 func Explain(action string, err error) (summary, detail string) {
 	summary = "Could not " + action
 
 	var transportErr *TransportError
 	if errors.As(err, &transportErr) {
 		return summary, fmt.Sprintf(
-			"%s\n\nThe endpoint did not answer at all. Check that the URL in the provider block is "+
-				"reachable from the machine running Terraform.", transportErr.Error())
+			"%s\n\nThe endpoint did not answer at all. Check that it is reachable from the machine "+
+				"running Terraform.", transportErr.Error())
 	}
 
 	var apiErr *APIError
@@ -168,8 +205,8 @@ func Explain(action string, err error) (summary, detail string) {
 			"This is almost always the token and not the permissions: an application token only " +
 			"carries a role claim when it was requested with the scope\n\n" +
 			"    urn:zitadel:iam:org:projects:roles\n\n" +
-			"(\"projects\", plural). The provider asks for it; a token fetched by hand, or one whose " +
-			"project_id does not match the platform's, will not have it."
+			"(\"projects\", plural). The provider asks for it; a token fetched by hand, or one " +
+			"requested against a different project, will not have it."
 
 	case apiErr.Code == CodeNoAccount:
 		return summary, apiErr.Error() + "\n\n" +
@@ -177,23 +214,42 @@ func Explain(action string, err error) (summary, detail string) {
 			"account. This usually means the credential belongs to a different environment than the " +
 			"endpoint it is being used against."
 
-	case apiErr.Status == http.StatusForbidden && apiErr.Code == "":
-		return summary, apiErr.Error() + "\n\n" +
-			"A 403 carrying no error code did not come from the API: something between Terraform " +
-			"and it refused the request. Check the endpoint in the provider block and whether the " +
-			"network Terraform runs on can reach it."
-
-	case apiErr.Status == http.StatusForbidden:
-		return summary, apiErr.Error() + "\n\n" +
-			"If the credential is an application token, check the role it was created with: member " +
-			"may edit records, while creating or deleting a whole zone needs owner or admin."
-
 	case apiErr.Code == CodeZoneNotActive:
 		return summary, apiErr.Error() + "\n\n" +
 			"Records can only be written into a zone that is active. A zone claimed for a name " +
 			"registered elsewhere stays pending until control of it has been proven, and it does not " +
 			"exist on the name servers until then — publish the challenge TXT record and add a " +
 			"`nubuluscloud_dns_zone_verification` resource that the records depend on."
+
+	case apiErr.Code == CodeInvalidInput:
+		return summary, apiErr.Error() + "\n\n" +
+			"The request was refused as malformed, so this is the configuration rather than the " +
+			"platform, whatever the status code says. The message above names the field."
+
+	case apiErr.Code == CodeHostnameConflict:
+		return summary, apiErr.Error() + "\n\n" +
+			"A hostname may only be routed by one account. Nothing in this account is holding it, " +
+			"so it cannot be found or freed from here."
+
+	case apiErr.Code == CodeQuotaExceeded:
+		return summary, apiErr.Error() + "\n\n" +
+			"The account has reached the number of tunnels it may have. Unlike the other refusals " +
+			"this one lifts on its own once a tunnel is destroyed."
+
+	case apiErr.Code == CodeTunnelInactive:
+		return summary, apiErr.Error() + "\n\n" +
+			"Routes live inside an active tunnel, and this one is not active. A tunnel becomes " +
+			"active on its own; retrying before it does will fail the same way."
+
+	case apiErr.Status == http.StatusForbidden && apiErr.Code == "":
+		return summary, apiErr.Error() + "\n\n" +
+			"A 403 carrying no error code did not come from the API: something between Terraform " +
+			"and it refused the request. Check whether the network Terraform runs on can reach it."
+
+	case apiErr.Status == http.StatusForbidden:
+		return summary, apiErr.Error() + "\n\n" +
+			"If the credential is an application token, check the role it was created with: member " +
+			"may edit records, while creating or deleting a whole zone needs owner or admin."
 
 	case apiErr.Status == http.StatusConflict:
 		return summary, apiErr.Error() + "\n\n" +
