@@ -134,6 +134,7 @@ func (p *NubulusProvider) Resources(ctx context.Context) []func() resource.Resou
 		NewDNSZoneResource,
 		NewDNSZoneVerificationResource,
 		NewDNSRRsetResource,
+		NewTunnelResource,
 	}
 }
 
