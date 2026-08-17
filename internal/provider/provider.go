@@ -135,6 +135,7 @@ func (p *NubulusProvider) Resources(ctx context.Context) []func() resource.Resou
 		NewDNSZoneVerificationResource,
 		NewDNSRRsetResource,
 		NewTunnelResource,
+		NewTunnelRouteResource,
 	}
 }
 
@@ -142,6 +143,7 @@ func (p *NubulusProvider) DataSources(ctx context.Context) []func() datasource.D
 	return []func() datasource.DataSource{
 		NewDNSZoneDataSource,
 		NewDNSZonesDataSource,
+		NewTunnelsDataSource,
 	}
 }
 
