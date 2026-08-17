@@ -1,6 +1,6 @@
 # Set external_id. Without it, an apply interrupted between creating the tunnel
-# and writing the state leaves one behind that nothing can find again — holding
-# an address from the pool and a credential nobody ever saw — and the next apply
+# and writing the state leaves one behind that nothing can find again, holding
+# an address from the pool and a credential nobody ever saw, and the next apply
 # makes another. With it, the next apply recognises the tunnel.
 resource "nubuluscloud_tunnel" "produccion" {
   name        = "produccion"
@@ -37,7 +37,7 @@ output "cname_target" {
 # Unattended recovery, for a pipeline that has to converge on its own.
 #
 # With adopt_existing, an apply that finds the external_id already taken takes
-# that tunnel over and issues it a NEW credential — which stops anything still
+# that tunnel over and issues it a NEW credential, which stops anything still
 # running on the old one within seconds. Leave it off unless the identifier is
 # unambiguously yours: the provider cannot tell your own interrupted apply from
 # a tunnel that is up and carrying traffic.

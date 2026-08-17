@@ -10,7 +10,7 @@ import (
 )
 
 // The error codes the provider reacts to by name. The API answers a single
-// envelope — {"error": "<CODE>", "message": "<prose>"} — on every route.
+// envelope, {"error": "<CODE>", "message": "<prose>"}, on every route.
 const (
 	// CodeNoAccountRole is a token with no role claim. It reads like a
 	// permission problem and is not one: see Explain.
@@ -24,8 +24,8 @@ const (
 	// CodeZoneNotActive is a write into a zone that is pending verification or
 	// suspended.
 	//
-	// It is a 409 as well, and that is the trap: retrying it is pointless — the
-	// zone will still be pending a second later — and the advice for it is the
+	// It is a 409 as well, and that is the trap: retrying it is pointless (the
+	// zone will still be pending a second later), and the advice for it is the
 	// opposite of the advice for a lost race. Anything that branches on 409
 	// alone gets both of these wrong.
 	CodeZoneNotActive = "ZONE_NOT_ACTIVE"
@@ -79,7 +79,7 @@ func (e *APIError) Error() string {
 	case e.Code != "":
 		return fmt.Sprintf("%s %s: HTTP %d %s: %s", e.Method, e.URL, e.Status, e.Code, e.Message)
 	case e.Message != "":
-		// No code means the body was not the envelope — something in front of
+		// No code means the body was not the envelope: something in front of
 		// the API answered. Whatever it said is the only clue there is, so it
 		// is kept rather than reduced to a status.
 		return fmt.Sprintf("%s %s: HTTP %d: %s", e.Method, e.URL, e.Status, e.Message)
@@ -90,7 +90,7 @@ func (e *APIError) Error() string {
 
 // TransportError is a request that never got an answer: DNS, TLS, timeout, or
 // a refused connection. It is kept apart from APIError because the advice is
-// completely different — an endpoint that never answers is usually the wrong
+// completely different: an endpoint that never answers is usually the wrong
 // endpoint, or a network that does not let the request out.
 type TransportError struct {
 	Method string
@@ -105,8 +105,8 @@ func (e *TransportError) Error() string {
 func (e *TransportError) Unwrap() error { return e.Err }
 
 // parseAPIError turns a failed response into an APIError, tolerating a body
-// that is not the envelope: anything answering on behalf of the API — a proxy,
-// a load balancer, an error page — replies in plain text, and losing that text
+// that is not the envelope: anything answering on behalf of the API (a proxy,
+// a load balancer, an error page) replies in plain text, and losing that text
 // would leave the user with a bare status code.
 func parseAPIError(method, url string, resp *http.Response) error {
 	apiErr := &APIError{Status: resp.StatusCode, Method: method, URL: url}
@@ -182,7 +182,7 @@ func IsLostRace(err error) bool {
 // The cases that match on a CODE come first, and must keep coming first. Two
 // failures with nothing in common share a status often enough that deciding on
 // the status alone gets one of the pair wrong, and a code that arrives with the
-// wrong status — which happens today for several of the tunnel ones — would
+// wrong status, which happens today for several of the tunnel ones, would
 // otherwise be explained as whatever that status usually means.
 func Explain(action string, err error) (summary, detail string) {
 	summary = "Could not " + action
@@ -218,7 +218,7 @@ func Explain(action string, err error) (summary, detail string) {
 		return summary, apiErr.Error() + "\n\n" +
 			"Records can only be written into a zone that is active. A zone claimed for a name " +
 			"registered elsewhere stays pending until control of it has been proven, and it does not " +
-			"exist on the name servers until then — publish the challenge TXT record and add a " +
+			"exist on the name servers until then. Publish the challenge TXT record and add a " +
 			"`nubuluscloud_dns_zone_verification` resource that the records depend on."
 
 	case apiErr.Code == CodeInvalidInput:
@@ -253,7 +253,7 @@ func Explain(action string, err error) (summary, detail string) {
 
 	case apiErr.Status == http.StatusConflict:
 		return summary, apiErr.Error() + "\n\n" +
-			"The record changed between being read and being written — somebody else edited the same " +
+			"The record changed between being read and being written: somebody else edited the same " +
 			"record set. The provider already retried once; re-running the plan is the fix."
 
 	case apiErr.Status == http.StatusBadGateway:

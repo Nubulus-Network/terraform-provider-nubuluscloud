@@ -125,14 +125,14 @@ func (r *dnsZoneResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"serial": schema.Int64Attribute{
 				MarkdownDescription: "SOA serial read from the primary. Null while the zone is pending, " +
-					"and also when the primary could not be read — see `primary_error`.",
+					"and also when the primary could not be read: see `primary_error`.",
 				Computed: true,
 			},
 			"primary_error": schema.StringAttribute{
 				MarkdownDescription: "Why the primary could not be read: `XFR_REFUSED`, `XFR_TSIG`, " +
 					"`XFR_TIMEOUT`, `XFR_DISABLED` or `XFR_FAILED`. Reading the zone does not fail when " +
-					"this happens — the registration is real information and does not stop being true " +
-					"because a name server is unreachable — so the reason is reported here instead.",
+					"this happens, because the registration is real information and does not stop being " +
+					"true when a name server is unreachable, so the reason is reported here instead.",
 				Computed: true,
 			},
 			"created_at": schema.StringAttribute{
@@ -247,7 +247,7 @@ func applyZoneDetail(model *dnsZoneResourceModel, detail *nubulus.ZoneDetail) {
 	if zone != nil {
 		model.ID = types.StringValue(zone.ID)
 		// `name` is NOT written back, and that is not an omission. The API
-		// normalizes it — lowercased, trailing dot removed — so a configuration
+		// normalizes it (lowercased, trailing dot removed), so a configuration
 		// that said "Ejemplo.com." would get a different string in state than
 		// it planned, which Terraform reports as "Provider produced
 		// inconsistent result after apply", and which on the next plan would
@@ -291,7 +291,7 @@ func applyZoneDetail(model *dnsZoneResourceModel, detail *nubulus.ZoneDetail) {
 		// left to prove, so a verified zone reports none. But the pattern this
 		// provider tells people to write publishes the challenge with
 		// `values = ["\"${...verification_txt_value}\""]`, and Terraform
-		// evaluates that expression on every later plan — including the destroy.
+		// evaluates that expression on every later plan, including the destroy.
 		// Letting the attribute fall back to null turns every subsequent
 		// command into "Invalid template interpolation value: the expression
 		// result is null", with no way out except editing the configuration

@@ -82,7 +82,7 @@ func TestNormalizeZoneNameAcceptsReverseZones(t *testing.T) {
 func TestNormalizeZoneNameRefusesUnderscoreLabels(t *testing.T) {
 	for _, in := range []string{"_dmarc.ejemplo.com", "_tcp.ejemplo.com", "exam_ple.com"} {
 		if got, ok := NormalizeZoneName(in); ok {
-			t.Errorf("NormalizeZoneName(%q) = %q, ok — a zone name is RFC 1123", in, got)
+			t.Errorf("NormalizeZoneName(%q) = %q, ok; a zone name is RFC 1123", in, got)
 		}
 	}
 }

@@ -21,7 +21,7 @@ type TunnelClient struct {
 
 // Tunnel is a tunnel as a read returns it.
 //
-// THE CREATE ANSWERS A DIFFERENT SHAPE — see CreateTunnelResult. That is the
+// THE CREATE ANSWERS A DIFFERENT SHAPE: see CreateTunnelResult. That is the
 // first thing to get wrong here: the field holding the identifier is `id` on a
 // read and `tunnel_id` on the create, and two of the values that matter most
 // exist only in the create.
@@ -69,7 +69,7 @@ type Tunnel struct {
 
 // TunnelSummary is what the listing returns: a tunnel plus how many routes hang
 // off it. The route count is the only field a read of a single tunnel does not
-// have — there the routes themselves come back instead.
+// have, because there the routes themselves come back instead.
 type TunnelSummary struct {
 	Tunnel
 	RouteCount int `json:"route_count"`
@@ -88,7 +88,7 @@ type TunnelWithRoutes struct {
 //   - TunnelToken, the credential the tunnel client authenticates with;
 //   - WireGuard.Interface.PrivateKey, the client end of the key pair.
 //
-// A read omits both, on purpose — the platform does not hand a secret out
+// A read omits both, on purpose: the platform does not hand a secret out
 // twice. Anything that keeps them has to carry the value it already has
 // forward, because refreshing from the API would write empty strings over them,
 // and importing a tunnel cannot recover them at all.
@@ -115,7 +115,7 @@ type CreateTunnelResult struct {
 	// Adopted says the create made nothing: a tunnel with this ExternalID was
 	// already there and this is it. The API answers 200 rather than 201.
 	//
-	// The credentials are deliberately absent in that case — a create that
+	// The credentials are deliberately absent in that case, because a create that
 	// handed them back would be a way of reading a secret that is only ever
 	// issued once. So an adopted result identifies a tunnel and cannot run
 	// one: whatever wants to use it has to rotate the credential first.
@@ -167,7 +167,7 @@ type WireGuardPeer struct {
 	PersistentKeepalive int    `json:"persistent_keepalive"`
 }
 
-// Route sends requests for a hostname — optionally only under a path — to an
+// Route sends requests for a hostname, optionally only under a path, to an
 // upstream reachable from the machine the tunnel client runs on.
 type Route struct {
 	ID       string `json:"id"`
@@ -203,7 +203,7 @@ type Route struct {
 // Priority carries a second trap: the create reads 0 as "unset" and turns it
 // into the default of 100, while an update can genuinely set it to 0 because
 // there it arrives as a pointer. Sending the intended value explicitly on
-// create — never 0 to mean 0 — is what keeps the two consistent.
+// create, never 0 to mean 0, is what keeps the two consistent.
 type CreateRouteInput struct {
 	Type       string `json:"type"`
 	Hostname   string `json:"hostname"`
@@ -222,7 +222,7 @@ type CreateRouteInput struct {
 //
 // WHAT IS NOT HERE CANNOT BE UPDATED. Type, Hostname and PathPrefix are fixed
 // for the life of a route, so anything modelling them as changeable would plan
-// a change that the apply then silently does not make — which is worse than
+// a change that the apply then silently does not make, which is worse than
 // refusing it.
 type UpdateRouteInput struct {
 	UpstreamHost   *string `json:"upstream_host,omitempty"`
@@ -239,7 +239,7 @@ type UpdateRouteInput struct {
 
 // tunnelPageSize is how many tunnels a page of the listing asks for. The API's
 // own default is smaller; asking for more keeps the number of round trips down
-// without assuming the ceiling is honoured — see ListTunnels.
+// without assuming the ceiling is honoured: see ListTunnels.
 const tunnelPageSize = 100
 
 // listPageLimit stops the pagination loop from running forever against a server
@@ -256,7 +256,7 @@ const listPageLimit = 1000
 // and two of those come back exactly once.
 //
 // WITH AN ExternalID THIS IS RECOVERABLE, WITHOUT ONE IT IS NOT. A create whose
-// answer is lost — the process died, the connection dropped — has left a tunnel
+// answer is lost (the process died, the connection dropped) has left a tunnel
 // behind either way. Repeating it with the same ExternalID finds that tunnel
 // and returns it with Adopted set; repeating it without one makes a second,
 // which holds an address from the pool and a credential nobody ever saw.
@@ -267,7 +267,7 @@ func (c *TunnelClient) CreateTunnel(ctx context.Context, in CreateTunnelInput) (
 	var out CreateTunnelResult
 	// The body is always sent, even when both fields are empty. `omitempty`
 	// reduces that to `{}`, which the API treats exactly as it treats no body
-	// at all — so there is no branch here and no way for the two paths to
+	// at all, so there is no branch here and no way for the two paths to
 	// drift apart.
 	if err := c.do(ctx, http.MethodPost, "/api/v2/tunnels", in, &out); err != nil {
 		return nil, err
@@ -281,7 +281,7 @@ func (c *TunnelClient) CreateTunnel(ctx context.Context, in CreateTunnelInput) (
 // and therefore the only way to make an adopted tunnel usable. The cost is
 // stated plainly because it is immediate: whatever was running with the old
 // credential stops working at its next poll and stays broken until it is given
-// the new one. Nothing else about the tunnel changes — not the address, not the
+// the new one. Nothing else about the tunnel changes: not the address, not the
 // key pair, not the routes.
 func (c *TunnelClient) RotateToken(ctx context.Context, id string) (*RotateTokenResult, error) {
 	var out RotateTokenResult
@@ -330,7 +330,7 @@ func (c *TunnelClient) GetTunnel(ctx context.Context, id string) (*TunnelWithRou
 // the end.
 //
 // The listing is paged and its default page is small, so a caller that read the
-// first page only would quietly see a prefix of the account's tunnels — which
+// first page only would quietly see a prefix of the account's tunnels, which
 // as a data source means Terraform planning against a subset of what exists.
 //
 // The loop advances by however many rows came back rather than by the page size
@@ -404,7 +404,7 @@ func (c *TunnelClient) ListRoutes(ctx context.Context, tunnelID string) ([]Route
 }
 
 // UpdateRoute changes the fields that can be changed. A nil field is left
-// alone, which is why the input is all pointers — see UpdateRouteInput for what
+// alone, which is why the input is all pointers: see UpdateRouteInput for what
 // is deliberately missing from it.
 func (c *TunnelClient) UpdateRoute(ctx context.Context, tunnelID, routeID string, in UpdateRouteInput) (*Route, error) {
 	var out Route

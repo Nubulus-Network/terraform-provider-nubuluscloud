@@ -35,7 +35,7 @@ type tunnelsDataSourceModel struct {
 //
 // The credentials are absent and always will be: they are issued once, when the
 // tunnel is created. A data source can therefore never produce a usable tunnel,
-// only tell you about one — which is worth saying because reaching for this to
+// only tell you about one, which is worth saying because reaching for this to
 // recover a lost token is the obvious thing to try.
 type tunnelSummaryModel struct {
 	ID              types.String `tfsdk:"id"`
@@ -104,7 +104,7 @@ func (d *tunnelsDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 						"online_status": schema.StringAttribute{
 							MarkdownDescription: "Whether the client end is connected right now: " +
 								"`online`, `degraded`, `offline` or `unknown`. It changes on its " +
-								"own — a plan that depends on it is a plan that is never stable.",
+								"own: a plan that depends on it is a plan that is never stable.",
 							Computed: true,
 						},
 						"route_count": schema.Int64Attribute{
@@ -133,7 +133,7 @@ func (d *tunnelsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	if externalID := config.ExternalID.ValueString(); externalID != "" {
 		// The filtered lookup answers at most one tunnel, and answers nothing
-		// rather than a 404 when there is none — so an empty list here is a
+		// rather than a 404 when there is none, so an empty list here is a
 		// result, not a failure to report.
 		tunnel, err := d.client.Tunnel.FindTunnelByExternalID(ctx, externalID)
 		if err != nil {

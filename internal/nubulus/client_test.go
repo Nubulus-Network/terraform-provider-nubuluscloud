@@ -15,7 +15,7 @@ import (
 //
 // Getting it wrong fails on the TOKEN endpoint with "context canceled", which
 // reads as an unreachable identity provider and sends whoever hits it to check
-// DNS, firewalls and credentials — none of which are the problem. It cost a real
+// DNS, firewalls and credentials, none of which are the problem. It cost a real
 // run to find; this test is what stops it coming back.
 func TestTheClientSurvivesTheContextItWasBuiltWith(t *testing.T) {
 	tokens := 0

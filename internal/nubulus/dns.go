@@ -254,7 +254,7 @@ func (c *DNSClient) DeleteRRset(ctx context.Context, zone, name, rrtype string) 
 // UPDATE_PRECONDITION_FAILED means the service read the record set, wrote
 // "change it only if it is still exactly this", and somebody else got there
 // first. Nothing is wrong with the request, so the useful response is to
-// re-read and try again — which is what the next call does, since the service
+// re-read and try again, which is what the next call does, since the service
 // rebuilds the precondition from a fresh read.
 //
 // It matches on the CODE and not on the 409, because there is a second 409 that

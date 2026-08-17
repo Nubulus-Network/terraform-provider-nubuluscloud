@@ -3,7 +3,7 @@
 page_title: "nubuluscloud_tunnel_route Resource - nubuluscloud"
 subcategory: ""
 description: |-
-  Sends requests for a hostname — optionally only those under a path — through a tunnel to an upstream reachable from the machine the tunnel client runs on.
+  Sends requests for a hostname, optionally only those under a path, through a tunnel to an upstream reachable from the machine the tunnel client runs on.
   Point the hostname at the tunnel's cname_target with a CNAME, or nothing will arrive.
   hostname is unique across the whole platform, not just your account: if another account is already serving it, creating this fails and there is nothing you can inspect or change to fix it from your side.
   Routes live inside an active tunnel. Writing one into a tunnel that is not active fails until the tunnel itself changes.
@@ -11,7 +11,7 @@ description: |-
 
 # nubuluscloud_tunnel_route (Resource)
 
-Sends requests for a hostname — optionally only those under a path — through a tunnel to an upstream reachable from the machine the tunnel client runs on.
+Sends requests for a hostname, optionally only those under a path, through a tunnel to an upstream reachable from the machine the tunnel client runs on.
 
 Point the hostname at the tunnel's `cname_target` with a CNAME, or nothing will arrive.
 

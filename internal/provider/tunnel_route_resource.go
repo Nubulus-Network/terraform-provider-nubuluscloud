@@ -58,7 +58,7 @@ func (r *tunnelRouteResource) Metadata(ctx context.Context, req resource.Metadat
 
 func (r *tunnelRouteResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Sends requests for a hostname — optionally only those under a path — " +
+		MarkdownDescription: "Sends requests for a hostname, optionally only those under a path, " +
 			"through a tunnel to an upstream reachable from the machine the tunnel client runs on.\n\n" +
 			"Point the hostname at the tunnel's `cname_target` with a CNAME, or nothing will arrive.\n\n" +
 			"`hostname` is unique across the whole platform, not just your account: if another " +
@@ -83,7 +83,7 @@ func (r *tunnelRouteResource) Schema(ctx context.Context, req resource.SchemaReq
 			// edit them: its update accepts only the upstream, strip_prefix,
 			// priority and enabled. Declaring them updatable would produce a
 			// plan promising to change a hostname and an apply that changes
-			// nothing — a provider lying about what it did.
+			// nothing, a provider lying about what it did.
 			"type": schema.StringAttribute{
 				MarkdownDescription: "`host` matches every request for the hostname; `path` matches " +
 					"only those under `path_prefix`. Changing it replaces the route.",
@@ -211,7 +211,7 @@ func (r *tunnelRouteResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// TWO FIELDS CANNOT BE SET WHEN A ROUTE IS CREATED, so a create alone can
-	// come back disagreeing with the plan — which Terraform reports as
+	// come back disagreeing with the plan, which Terraform reports as
 	// "Provider produced inconsistent result after apply" and which, if it were
 	// smoothed over by writing the server's answer instead, would show up as a
 	// diff that never goes away:
@@ -222,8 +222,8 @@ func (r *tunnelRouteResource) Create(ctx context.Context, req resource.CreateReq
 	//     arrives as a pointer.
 	//
 	// So the create is followed by an update whenever it landed somewhere other
-	// than where the plan asked. In the ordinary case — enabled, priority not
-	// zero — nothing extra is sent.
+	// than where the plan asked. In the ordinary case (enabled, priority not
+	// zero) nothing extra is sent.
 	route := created
 	if fix, needed := routeCorrection(&plan, created); needed {
 		updated, err := r.client.Tunnel.UpdateRoute(ctx, tunnelID, created.ID, fix)
@@ -330,7 +330,7 @@ func (r *tunnelRouteResource) Delete(ctx context.Context, req resource.DeleteReq
 //
 // Both halves are needed because a route is only addressable through its
 // tunnel: there is no route endpoint that does not name one. Unlike a tunnel,
-// this import is complete — a route has no write-only fields.
+// this import is complete: a route has no write-only fields.
 func (r *tunnelRouteResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	tunnelID, routeID, ok := strings.Cut(req.ID, "/")
 	if !ok || tunnelID == "" || routeID == "" {

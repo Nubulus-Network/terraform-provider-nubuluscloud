@@ -63,18 +63,18 @@ func (r *tunnelResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		MarkdownDescription: "A tunnel: an outbound WireGuard connection from a machine of yours to " +
 			"the platform, which then serves the hostnames you route through it with " +
 			"`nubuluscloud_tunnel_route`.\n\n" +
-			"Nothing about the tunnel itself is configurable — the address, the key pair and the " +
+			"Nothing about the tunnel itself is configurable: the address, the key pair and the " +
 			"credential are all issued by the platform. What you choose is only how to recognise it.\n\n" +
 			"## The credential is issued once\n\n" +
 			"`tunnel_token` and `wireguard_private_key` come back when the tunnel is created and " +
 			"are never readable again. They are kept in state and cannot be refreshed from the API; " +
 			"a tunnel brought in with `terraform import` has neither, and there is no way to " +
-			"recover them — you can only issue new ones, which breaks whatever is using the old.\n\n" +
+			"recover them. You can only issue new ones, which breaks whatever is using the old.\n\n" +
 			"## Set `external_id` if you value your apply being repeatable\n\n" +
 			"Without it, an apply interrupted between the create and the state being written leaves " +
 			"a tunnel behind that nothing can find again: it holds an address from the pool and a " +
 			"credential nobody ever saw, and the next apply makes another one. With it, the next " +
-			"apply recognises the tunnel — see `adopt_existing` for what happens then.",
+			"apply recognises the tunnel: see `adopt_existing` for what happens then.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -112,8 +112,8 @@ func (r *tunnelResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					"because an adopted tunnel comes back without one and would otherwise be " +
 					"unusable. Anything still running on the old credential stops working within " +
 					"seconds. Turn it on when the identifier is genuinely yours and unattended " +
-					"recovery is worth more than that risk — a pipeline that must converge on its " +
-					"own — and leave it off otherwise.",
+					"recovery is worth more than that risk (a pipeline that must converge on its " +
+					"own), and leave it off otherwise.",
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
@@ -143,7 +143,7 @@ func (r *tunnelResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"online_status": schema.StringAttribute{
 				MarkdownDescription: "Whether the client end is currently connected: `online`, " +
 					"`degraded`, `offline` or `unknown`. It changes on its own, with nothing " +
-					"applied — do not build a plan around it.",
+					"applied, so do not build a plan around it.",
 				Computed: true,
 			},
 
@@ -224,7 +224,7 @@ func (r *tunnelResource) Create(ctx context.Context, req resource.CreateRequest,
 	if created.Adopted {
 		// The tunnel already existed under this external_id. Whether that is a
 		// retry of an apply that died, or a live tunnel somebody else is
-		// running, is not knowable from here — the two are the same answer.
+		// running, is not knowable from here: the two are the same answer.
 		if !plan.AdoptExisting.ValueBool() {
 			resp.Diagnostics.AddError(
 				"A tunnel with this external_id already exists",
@@ -235,7 +235,7 @@ func (r *tunnelResource) Create(ctx context.Context, req resource.CreateRequest,
 					"traffic right now.\n\nEither:\n\n"+
 					"  * bring it under management as it is, keeping it running:\n"+
 					"      terraform import <address> "+created.TunnelID+"\n"+
-					"    the credential is NOT recoverable this way — it is only ever issued once — "+
+					"    the credential is NOT recoverable this way, since it is only ever issued once, "+
 					"so do this when whatever runs the tunnel already has it; or\n\n"+
 					"  * set `adopt_existing = true` to take it over and issue a new credential, "+
 					"which stops anything still using the old one; or\n\n"+
@@ -244,8 +244,8 @@ func (r *tunnelResource) Create(ctx context.Context, req resource.CreateRequest,
 			return
 		}
 
-		// Asked for explicitly. An adopted tunnel arrives with no credential —
-		// the API will not hand one out twice — so it has to be issued, and
+		// Asked for explicitly. An adopted tunnel arrives with no credential,
+		// because the API will not hand one out twice, so it has to be issued, and
 		// that is precisely the part that breaks whatever was using the old.
 		tflog.Warn(ctx, "adopting an existing tunnel and rotating its credential", map[string]any{
 			"tunnel_id":   created.TunnelID,
@@ -300,8 +300,8 @@ func (r *tunnelResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	// THE SECRETS ARE NOT TOUCHED HERE. A read does not carry them — the
-	// platform issues them once — so refreshing them from the API would write
+	// THE SECRETS ARE NOT TOUCHED HERE. A read does not carry them, because the
+	// platform issues them once, so refreshing them from the API would write
 	// empty strings over the only copy that exists. They stay exactly as state
 	// already has them, which for an imported tunnel means null.
 	applyTunnelRead(&state, read.Tunnel)
@@ -344,8 +344,8 @@ func (r *tunnelResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// applyTunnelCreate copies the answer to a create — the only place the
-// credentials ever appear — over the model.
+// applyTunnelCreate copies the answer to a create, the only place the
+// credentials ever appear, over the model.
 func applyTunnelCreate(model *tunnelResourceModel, created *nubulus.CreateTunnelResult) {
 	model.ID = types.StringValue(created.TunnelID)
 	model.TunnelSubdomain = types.StringValue(created.TunnelSubdomain)
@@ -377,7 +377,7 @@ func applyTunnelRead(model *tunnelResourceModel, tunnel *nubulus.Tunnel) {
 	model.OnlineStatus = types.StringValue(tunnel.OnlineStatus)
 
 	// `name` and `external_id` are configuration, and the API echoes them back
-	// exactly as they were sent, so there is nothing to reconcile — except when
+	// exactly as they were sent, so there is nothing to reconcile, except when
 	// the tunnel was imported, where state has null and the platform has the
 	// value. Writing them only when they are absent adopts the truth without
 	// ever overwriting what the configuration says.
@@ -395,7 +395,7 @@ func applyTunnelRead(model *tunnelResourceModel, tunnel *nubulus.Tunnel) {
 
 // keepKnownOr preserves what state already has and falls back to a value the
 // API can still derive. It exists for cname_target, which the create reports
-// and a read does not, but which is always the tunnel's own subdomain — so an
+// and a read does not, but which is always the tunnel's own subdomain, so an
 // imported tunnel gets a correct value instead of a null one.
 func keepKnownOr(prior types.String, fallback string) types.String {
 	if !prior.IsNull() && !prior.IsUnknown() && prior.ValueString() != "" {

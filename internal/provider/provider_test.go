@@ -80,7 +80,7 @@ func TestProviderSchemaTakesOnlyTheCredential(t *testing.T) {
 // The schema and the model have to agree, and nothing at compile time makes
 // them: an attribute with no matching `tfsdk` field fails at runtime, on the
 // first real command, with a value conversion error that names neither. The
-// other direction is worse — a `tfsdk` field with no attribute behind it fails
+// other direction is worse: a `tfsdk` field with no attribute behind it fails
 // the same way, which is exactly what removing an attribute risks.
 //
 // So the test round-trips a whole configuration through the model, covering
@@ -131,7 +131,7 @@ func TestTheCredentialComesFromTheEnvironment(t *testing.T) {
 
 // The four platform values left the schema but not the provider: they are still
 // read from the environment, which is what keeps a build usable against a test
-// environment without a release. Losing that would be silent — the compiled-in
+// environment without a release. Losing that would be silent, because the compiled-in
 // defaults would answer instead, and every request would go to production.
 func TestPlatformValuesComeFromTheEnvironment(t *testing.T) {
 	t.Setenv("NUBULUS_TOKEN_URL", "https://token.example/oauth2/token")

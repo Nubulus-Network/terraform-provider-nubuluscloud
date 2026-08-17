@@ -47,8 +47,8 @@ Both can also be written in the provider block, and they are the only two things
 | `client_id` | `NUBULUS_CLIENT_ID` |
 | `client_secret` | `NUBULUS_CLIENT_SECRET` |
 
-Everything else — the token endpoint the credential is sent to, the project the access token
-is scoped to and the API endpoints — describes a hosted service rather than a preference, so
+Everything else (the token endpoint the credential is sent to, the project the access token
+is scoped to and the API endpoints) describes a hosted service rather than a preference, so
 it is not an argument of the provider block and a configuration cannot name it. The values
 are compiled in; a build can still be pointed at another environment with
 `NUBULUS_TOKEN_URL`, `NUBULUS_PROJECT_ID`, `NUBULUS_DNS_ENDPOINT` and
@@ -56,7 +56,7 @@ are compiled in; a build can still be pointed at another environment with
 
 A personal access token from the identity provider **cannot** be used instead, and it is not
 a matter of permissions: a PAT is an encrypted token the services cannot parse, and it is
-minted outside the token endpoint so it carries no scopes — which means no project audience
+minted outside the token endpoint so it carries no scopes, which means no project audience
 and no role claim, two of the three things every service requires.
 
 ### The role of the token is a real limit
@@ -85,8 +85,8 @@ A token that only maintains records can, and should, be created as `member`.
 Two things about the model are worth knowing before writing any of it:
 
 * **The unit is the record set, not the record.** Three A records on `www` are one resource
-  with three `values`. This is what the DNS protocol operates on — a change to one value of a
-  set rewrites the whole set — so three separate resources would race against each other.
+  with three `values`. This is what the DNS protocol operates on: a change to one value of a
+  set rewrites the whole set, so three separate resources would race against each other.
 * **A zone for a name registered elsewhere does not exist on the name servers until it is
   verified.** That ordering is a safety property and not a workflow preference: a zone
   created before control is proven answers authoritatively for a name that is not yours. It
@@ -115,7 +115,7 @@ provider_installation {
 }
 ```
 
-With an override in place `terraform init` is skipped — Terraform says so on every command,
+With an override in place `terraform init` is skipped, and Terraform says so on every command,
 and that is expected.
 
 The acceptance tests create real zones and records. They need credentials plus a zone the

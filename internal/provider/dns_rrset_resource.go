@@ -53,7 +53,7 @@ func (r *dnsRRsetResource) Schema(ctx context.Context, req resource.SchemaReques
 		MarkdownDescription: "A DNS record **set**: every record that shares a name and a type.\n\n" +
 			"The set is the unit and not the individual record, because that is what the DNS protocol " +
 			"operates on. Three A records on `www` are one `nubuluscloud_dns_rrset` with three " +
-			"`values`, never three resources — modelling them separately would have each apply race " +
+			"`values`, never three resources: modelling them separately would have each apply race " +
 			"against the other two.\n\n" +
 			"Writing records needs a token with the `member` role or above, and a zone that is " +
 			"`active`.",
@@ -121,7 +121,7 @@ func (r *dnsRRsetResource) Configure(ctx context.Context, req resource.Configure
 // Every rule here is one the API enforces as well, and NONE of them is stricter
 // than the service: a provider that refuses a configuration the platform would
 // have accepted is worse than one that says nothing, because there is no way
-// around it. The rdata itself is deliberately not validated — that needs a real
+// around it. The rdata itself is deliberately not validated, because that needs a real
 // DNS parser, and half a parser here would reject valid records.
 func (r *dnsRRsetResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var config dnsRRsetResourceModel
@@ -185,7 +185,7 @@ func (r *dnsRRsetResource) ValidateConfig(ctx context.Context, req resource.Vali
 	// The API trims every value before writing it. A configured value with
 	// surrounding whitespace would therefore come back different from what was
 	// planned, and Terraform reports that as "Provider produced inconsistent
-	// result after apply" — a confusing message for a stray space.
+	// result after apply", a confusing message for a stray space.
 	if !config.Values.IsUnknown() && !config.Values.IsNull() {
 		for _, element := range config.Values.Elements() {
 			value, ok := element.(types.String)
@@ -219,7 +219,7 @@ func (r *dnsRRsetResource) Create(ctx context.Context, req resource.CreateReques
 	rrtype := strings.ToUpper(strings.TrimSpace(plan.Type.ValueString()))
 
 	// PUT replaces whatever is there, so creating on top of an existing record
-	// set would silently destroy records this configuration never mentioned —
+	// set would silently destroy records this configuration never mentioned,
 	// records somebody may be relying on. Looking first turns that into an
 	// error naming the import command.
 	//
@@ -375,7 +375,7 @@ func (r *dnsRRsetResource) ImportState(ctx context.Context, req resource.ImportS
 // It deliberately does NOT write back the name and the type: those keep the
 // spelling the configuration used. Terraform requires the value it saves for a
 // non-computed attribute to equal the one it planned, so replacing `www` with
-// `www.example.com.` — the same record, spelled the way the API spells it —
+// `www.example.com.` (the same record, spelled the way the API spells it)
 // would fail the apply with "Provider produced inconsistent result".
 func (r *dnsRRsetResource) apply(
 	ctx context.Context,
