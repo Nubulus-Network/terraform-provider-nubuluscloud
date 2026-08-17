@@ -14,11 +14,30 @@ BREAKING CHANGES:
   defaults apply as before. The provider block now takes `client_id` and
   `client_secret` and nothing else.
 
-NOTES:
+FEATURES:
 
-* Groundwork for the tunnel resources: the provider now carries a typed client
-  for the tunnel API. No resource or data source uses it yet, so nothing that
-  can be written in a configuration gains anything from it.
+* **New resource:** `nubuluscloud_tunnel` — an outbound WireGuard connection
+  from a machine of yours to the platform. Nothing about it is configurable:
+  the address, the key pair and the credential are all issued by the platform,
+  and the only things you choose are a `name` and an `external_id` to recognise
+  it by.
+
+  Two properties of it are worth knowing before you write one:
+
+  * `tunnel_token` and `wireguard_private_key` are issued **once**, when the
+    tunnel is created, and can never be read back. They live in the state file
+    and nowhere else. A tunnel brought in with `terraform import` has neither,
+    and no amount of refreshing recovers them.
+
+  * Setting `external_id` is what makes an apply repeatable. Without it, an
+    apply interrupted between creating the tunnel and writing the state leaves
+    one behind that nothing can find again — holding an address from the pool
+    and a credential nobody ever saw — and the next apply makes another. With
+    it, the next apply recognises the tunnel and, by default, **stops with an
+    explanation** rather than taking it over: the provider cannot tell your own
+    interrupted apply from a tunnel that is up and carrying traffic under the
+    same identifier. `adopt_existing = true` takes it over and issues a new
+    credential, which stops anything still running on the old one.
 
 ENHANCEMENTS:
 

@@ -20,10 +20,13 @@ func TestCreateAndGetAnswerDifferentShapes(t *testing.T) {
 	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == "/api/v2/tunnels":
-			// The create takes no body at all.
+			// A create with no identity sends `{}`, which the API treats
+			// exactly as it treats no body — that equivalence is what keeps
+			// the callers that predate the body working, and it has its own
+			// test in tunnel_identity_test.go.
 			body, _ := io.ReadAll(r.Body)
-			if len(body) != 0 {
-				t.Errorf("the create sent a body: %q", body)
+			if s := strings.TrimSpace(string(body)); s != "{}" {
+				t.Errorf("the create sent %q, want {}", s)
 			}
 			writeJSON(t, w, http.StatusCreated, map[string]any{
 				"tunnel_id":        "tun-1",
@@ -73,9 +76,12 @@ func TestCreateAndGetAnswerDifferentShapes(t *testing.T) {
 		}
 	}))
 
-	created, err := client.Tunnel.CreateTunnel(t.Context())
+	created, err := client.Tunnel.CreateTunnel(t.Context(), CreateTunnelInput{})
 	if err != nil {
 		t.Fatalf("CreateTunnel: %v", err)
+	}
+	if created.Adopted {
+		t.Error("a create that made a tunnel must not report an adoption")
 	}
 	if created.TunnelID != "tun-1" {
 		t.Errorf("TunnelID = %q, want the value of tunnel_id", created.TunnelID)
