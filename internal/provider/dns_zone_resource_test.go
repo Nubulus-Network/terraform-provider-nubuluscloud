@@ -13,7 +13,7 @@ import (
 //
 // The flow this provider documents publishes the challenge record with
 // `values = ["\"${...verification_txt_value}\""]`, and Terraform evaluates that
-// expression on every later plan — including the destroy. Blanking the value
+// expression on every later plan, including the destroy. Blanking the value
 // turns every command after a successful verification into "Invalid template
 // interpolation value", with no way out but editing the configuration that had
 // just worked. It cost a real destroy to find.
@@ -39,7 +39,7 @@ func TestTheChallengeSurvivesVerification(t *testing.T) {
 	}
 }
 
-// A zone that never had a challenge — one already assigned to the account —
+// A zone that never had a challenge (one already assigned to the account)
 // keeps a null, because inventing a value would be worse than reporting none.
 func TestAZoneThatNeverNeededAChallengeReportsNone(t *testing.T) {
 	state := &dnsZoneResourceModel{

@@ -58,7 +58,7 @@ Read-Only:
 - `external_id` (String) The creator's own identifier, if any.
 - `id` (String) Tunnel identifier.
 - `name` (String) The label given at creation, if any.
-- `online_status` (String) Whether the client end is connected right now: `online`, `degraded`, `offline` or `unknown`. It changes on its own — a plan that depends on it is a plan that is never stable.
+- `online_status` (String) Whether the client end is connected right now: `online`, `degraded`, `offline` or `unknown`. It changes on its own: a plan that depends on it is a plan that is never stable.
 - `route_count` (Number) How many routes hang off the tunnel.
 - `status` (String) Lifecycle of the tunnel. Routes can only be written into an `active` one.
 - `tunnel_subdomain` (String) The name the platform serves the tunnel on, and what a hostname of yours is pointed at with a CNAME.

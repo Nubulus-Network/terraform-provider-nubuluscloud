@@ -21,7 +21,7 @@ func TestCreateAndGetAnswerDifferentShapes(t *testing.T) {
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == "/api/v2/tunnels":
 			// A create with no identity sends `{}`, which the API treats
-			// exactly as it treats no body — that equivalence is what keeps
+			// exactly as it treats no body, and that equivalence is what keeps
 			// the callers that predate the body working, and it has its own
 			// test in tunnel_identity_test.go.
 			body, _ := io.ReadAll(r.Body)

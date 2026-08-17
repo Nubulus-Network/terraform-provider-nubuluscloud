@@ -11,7 +11,7 @@ import (
 // The rules here are a copy of the ones the API enforces, and the copy is on
 // purpose: the provider has to be able to say "that is not a name" during
 // `terraform plan`, when it has not talked to anything yet. What it must NOT do
-// is enforce anything the service does not — a provider stricter than the API
+// is enforce anything the service does not: a provider stricter than the API
 // refuses configurations that would have worked, while a looser one only moves
 // the error later.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ var labelRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 // It applies to the name of a record and never to the name of a zone. A zone is
 // registered and delegated as a hostname-shaped name, where RFC 1123 is the
 // right rule; a record name is any name that can appear in the DNS. The
-// underscore is only ever the first character of a label — RFC 8552 defines
+// underscore is only ever the first character of a label. RFC 8552 defines
 // these as a prefix on an otherwise ordinary name, not as a character that
 // became legal everywhere.
 var recordLabelRe = regexp.MustCompile(`^_?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
@@ -165,7 +165,7 @@ func QualifyName(name, zone string) (string, bool) {
 	return qualified, true
 }
 
-// IsApex reports whether a qualified owner name is the zone apex — the place
+// IsApex reports whether a qualified owner name is the zone apex, the place
 // where the SOA and the NS record set live, and therefore where several rules
 // change.
 func IsApex(qualifiedName, zone string) bool {

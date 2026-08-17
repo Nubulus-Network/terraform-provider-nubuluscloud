@@ -52,8 +52,8 @@ func stringList(values []string) types.List {
 	for _, v := range values {
 		elements = append(elements, types.StringValue(v))
 	}
-	// The error return is impossible here — every element is a StringValue and
-	// the element type is StringType — so it is dropped rather than plumbed
+	// The error return is impossible here (every element is a StringValue and
+	// the element type is StringType), so it is dropped rather than plumbed
 	// through every caller.
 	list, _ := types.ListValue(types.StringType, elements)
 	return list
@@ -95,8 +95,8 @@ func timeValue(t *time.Time) types.String {
 
 // stringValue renders a possibly-empty string as null rather than "".
 //
-// The distinction matters for the fields that are absent instead of empty —
-// primary_error on a healthy zone, verification on one that never needed it —
+// The distinction matters for the fields that are absent instead of empty
+// (primary_error on a healthy zone, verification on one that never needed it),
 // because "" in state reads as "the API said empty" when what happened is that
 // the API said nothing.
 func stringValue(s string) types.String {

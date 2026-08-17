@@ -61,9 +61,9 @@ output "challenge" {
 - `created_at` (String) When the zone was claimed, in RFC 3339.
 - `id` (String) Zone identifier, `zone_` followed by a ULID.
 - `nameservers` (List of String) The name servers to delegate the domain to. Present in both states: this is also what has to be published at the registrar for the zone to be used at all.
-- `primary_error` (String) Why the primary could not be read: `XFR_REFUSED`, `XFR_TSIG`, `XFR_TIMEOUT`, `XFR_DISABLED` or `XFR_FAILED`. Reading the zone does not fail when this happens — the registration is real information and does not stop being true because a name server is unreachable — so the reason is reported here instead.
+- `primary_error` (String) Why the primary could not be read: `XFR_REFUSED`, `XFR_TSIG`, `XFR_TIMEOUT`, `XFR_DISABLED` or `XFR_FAILED`. Reading the zone does not fail when this happens, because the registration is real information and does not stop being true when a name server is unreachable, so the reason is reported here instead.
 - `reserved_until` (String) When an unproven claim lapses and the name goes back to being free, in RFC 3339.
-- `serial` (Number) SOA serial read from the primary. Null while the zone is pending, and also when the primary could not be read — see `primary_error`.
+- `serial` (Number) SOA serial read from the primary. Null while the zone is pending, and also when the primary could not be read: see `primary_error`.
 - `source` (String) `neodigit` for a domain already assigned to the account, `external` for a name registered elsewhere.
 - `status` (String) `pending_verification`, `active` or `suspended`. Records can only be written into an `active` zone.
 - `verification_required` (Boolean) Whether control of the name still has to be proven.

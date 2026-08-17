@@ -194,7 +194,7 @@ func (r *dnsZoneVerificationResource) Create(ctx context.Context, req resource.C
 	)
 }
 
-// Read drops the resource when the zone stops being verified — which is to say
+// Read drops the resource when the zone stops being verified, which is to say
 // when the zone is gone, or has been reclaimed and is pending again. In both
 // cases the proof has to happen once more, and that is exactly what recreating
 // this resource does.
@@ -228,8 +228,8 @@ func (r *dnsZoneVerificationResource) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// Update only ever sees timeout and poll_interval change — zone replaces the
-// resource — so there is nothing to do but keep what is already known.
+// Update only ever sees timeout and poll_interval change, since zone replaces
+// the resource, so there is nothing to do but keep what is already known.
 func (r *dnsZoneVerificationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state dnsZoneVerificationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -262,7 +262,7 @@ func verificationAdvice(last *nubulus.VerificationResult, timeout time.Duration)
 	case "TXT_NOT_FOUND":
 		return detail + "No challenge record was found at all. Either it has not been published yet, " +
 			"or the negative cache of the parent zone is still answering with what was true before it " +
-			"was — that cache lasts as long as the parent's SOA minimum, commonly an hour. Check the " +
+			"was: that cache lasts as long as the parent's SOA minimum, commonly an hour. Check the " +
 			"record is published, then raise `timeout`."
 	case "TXT_MISMATCH":
 		return detail + "A challenge record exists but none of its values is this zone's token. This " +

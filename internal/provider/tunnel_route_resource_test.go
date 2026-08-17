@@ -101,7 +101,7 @@ func TestACreateIsCorrectedWhenTheAPICannotHonourThePlan(t *testing.T) {
 
 // The three fields the API cannot edit have to replace the route. If any of
 // them ever became updatable, a plan would promise to change a hostname and the
-// apply would change nothing — the worst thing a provider can do, because it
+// apply would change nothing, the worst thing a provider can do, because it
 // reports success.
 func TestTheUneditableFieldsRequireReplacement(t *testing.T) {
 	s := tunnelRouteSchema(t)
@@ -116,7 +116,7 @@ func TestTheUneditableFieldsRequireReplacement(t *testing.T) {
 	}
 }
 
-// A path route with no prefix, or with "/", matches everything — which is what
+// A path route with no prefix, or with "/", matches everything, which is what
 // a host route is for. Catching it at plan time turns a 400 halfway through an
 // apply into a message before anything is sent.
 func TestAPathRouteNeedsARealPrefix(t *testing.T) {
@@ -143,7 +143,7 @@ func TestAPathRouteNeedsARealPrefix(t *testing.T) {
 }
 
 // validateRouteConfig runs the resource's real ValidateConfig against a
-// configuration, rather than a copy of its logic — a test that mirrors the
+// configuration, rather than a copy of its logic: a test that mirrors the
 // implementation agrees with it by construction and catches nothing.
 func validateRouteConfig(t *testing.T, routeType string, prefix types.String) diag.Diagnostics {
 	t.Helper()

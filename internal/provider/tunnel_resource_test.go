@@ -23,7 +23,7 @@ func tunnelSchema(t *testing.T) schema.Schema {
 	return resp.Schema
 }
 
-// A read cannot see the credentials — the platform issues them once — so
+// A read cannot see the credentials (the platform issues them once), so
 // applying one must leave them exactly as they were.
 //
 // This is the failure that would be worst and quietest: the tunnel keeps

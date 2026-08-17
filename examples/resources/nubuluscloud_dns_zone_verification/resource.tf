@@ -2,7 +2,7 @@ resource "nubuluscloud_dns_zone" "externo" {
   name = "ejemplo.org"
 }
 
-# The challenge record goes wherever the domain resolves TODAY — at the current
+# The challenge record goes wherever the domain resolves TODAY, at the current
 # provider, not here: the zone does not exist on our name servers yet.
 resource "otro_proveedor_registro_dns" "reto" {
   name    = nubuluscloud_dns_zone.externo.verification_txt_host

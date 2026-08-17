@@ -4,33 +4,33 @@ page_title: "nubuluscloud_tunnel Resource - nubuluscloud"
 subcategory: ""
 description: |-
   A tunnel: an outbound WireGuard connection from a machine of yours to the platform, which then serves the hostnames you route through it with nubuluscloud_tunnel_route.
-  Nothing about the tunnel itself is configurable — the address, the key pair and the credential are all issued by the platform. What you choose is only how to recognise it.
+  Nothing about the tunnel itself is configurable: the address, the key pair and the credential are all issued by the platform. What you choose is only how to recognise it.
   The credential is issued once
-  tunnel_token and wireguard_private_key come back when the tunnel is created and are never readable again. They are kept in state and cannot be refreshed from the API; a tunnel brought in with terraform import has neither, and there is no way to recover them — you can only issue new ones, which breaks whatever is using the old.
+  tunnel_token and wireguard_private_key come back when the tunnel is created and are never readable again. They are kept in state and cannot be refreshed from the API; a tunnel brought in with terraform import has neither, and there is no way to recover them. You can only issue new ones, which breaks whatever is using the old.
   Set external_id if you value your apply being repeatable
-  Without it, an apply interrupted between the create and the state being written leaves a tunnel behind that nothing can find again: it holds an address from the pool and a credential nobody ever saw, and the next apply makes another one. With it, the next apply recognises the tunnel — see adopt_existing for what happens then.
+  Without it, an apply interrupted between the create and the state being written leaves a tunnel behind that nothing can find again: it holds an address from the pool and a credential nobody ever saw, and the next apply makes another one. With it, the next apply recognises the tunnel: see adopt_existing for what happens then.
 ---
 
 # nubuluscloud_tunnel (Resource)
 
 A tunnel: an outbound WireGuard connection from a machine of yours to the platform, which then serves the hostnames you route through it with `nubuluscloud_tunnel_route`.
 
-Nothing about the tunnel itself is configurable — the address, the key pair and the credential are all issued by the platform. What you choose is only how to recognise it.
+Nothing about the tunnel itself is configurable: the address, the key pair and the credential are all issued by the platform. What you choose is only how to recognise it.
 
 ## The credential is issued once
 
-`tunnel_token` and `wireguard_private_key` come back when the tunnel is created and are never readable again. They are kept in state and cannot be refreshed from the API; a tunnel brought in with `terraform import` has neither, and there is no way to recover them — you can only issue new ones, which breaks whatever is using the old.
+`tunnel_token` and `wireguard_private_key` come back when the tunnel is created and are never readable again. They are kept in state and cannot be refreshed from the API; a tunnel brought in with `terraform import` has neither, and there is no way to recover them. You can only issue new ones, which breaks whatever is using the old.
 
 ## Set `external_id` if you value your apply being repeatable
 
-Without it, an apply interrupted between the create and the state being written leaves a tunnel behind that nothing can find again: it holds an address from the pool and a credential nobody ever saw, and the next apply makes another one. With it, the next apply recognises the tunnel — see `adopt_existing` for what happens then.
+Without it, an apply interrupted between the create and the state being written leaves a tunnel behind that nothing can find again: it holds an address from the pool and a credential nobody ever saw, and the next apply makes another one. With it, the next apply recognises the tunnel: see `adopt_existing` for what happens then.
 
 ## Example Usage
 
 ```terraform
 # Set external_id. Without it, an apply interrupted between creating the tunnel
-# and writing the state leaves one behind that nothing can find again — holding
-# an address from the pool and a credential nobody ever saw — and the next apply
+# and writing the state leaves one behind that nothing can find again, holding
+# an address from the pool and a credential nobody ever saw, and the next apply
 # makes another. With it, the next apply recognises the tunnel.
 resource "nubuluscloud_tunnel" "produccion" {
   name        = "produccion"
@@ -67,7 +67,7 @@ output "cname_target" {
 # Unattended recovery, for a pipeline that has to converge on its own.
 #
 # With adopt_existing, an apply that finds the external_id already taken takes
-# that tunnel over and issues it a NEW credential — which stops anything still
+# that tunnel over and issues it a NEW credential, which stops anything still
 # running on the old one within seconds. Leave it off unless the identifier is
 # unambiguously yours: the provider cannot tell your own interrupted apply from
 # a tunnel that is up and carrying traffic.
@@ -87,7 +87,7 @@ resource "nubuluscloud_tunnel" "ci" {
 
 `false`, the default, **fails** and tells you the two ways out. This is the safe answer because the provider cannot tell your own interrupted apply from a tunnel that is up and carrying traffic under the same identifier.
 
-`true` takes the existing tunnel over and **issues it a new credential**, because an adopted tunnel comes back without one and would otherwise be unusable. Anything still running on the old credential stops working within seconds. Turn it on when the identifier is genuinely yours and unattended recovery is worth more than that risk — a pipeline that must converge on its own — and leave it off otherwise.
+`true` takes the existing tunnel over and **issues it a new credential**, because an adopted tunnel comes back without one and would otherwise be unusable. Anything still running on the old credential stops working within seconds. Turn it on when the identifier is genuinely yours and unattended recovery is worth more than that risk (a pipeline that must converge on its own), and leave it off otherwise.
 - `external_id` (String) Your own identifier for this tunnel, unique within your account. At most 128 characters, no spaces.
 
 It is what makes creating a tunnel repeatable: an apply that dies after the tunnel exists but before the state is written can be run again, and the platform will recognise the tunnel instead of making a second one.
@@ -102,7 +102,7 @@ Changing it replaces the tunnel.
 - `account_id` (String) Account the tunnel belongs to, resolved from the token.
 - `cname_target` (String) What to point a hostname of yours at with a CNAME, so that requests for it arrive through this tunnel.
 - `id` (String) Tunnel identifier, assigned by the platform.
-- `online_status` (String) Whether the client end is currently connected: `online`, `degraded`, `offline` or `unknown`. It changes on its own, with nothing applied — do not build a plan around it.
+- `online_status` (String) Whether the client end is currently connected: `online`, `degraded`, `offline` or `unknown`. It changes on its own, with nothing applied, so do not build a plan around it.
 - `peer_allowed_ips` (String) `AllowedIPs` for the peer.
 - `peer_endpoint` (String) Host and port the client connects out to.
 - `peer_public_key` (String) Public key of the platform end.
@@ -127,7 +127,7 @@ The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/c
 # The import is INCOMPLETE and cannot be otherwise: tunnel_token and
 # wireguard_private_key are issued once, at creation, and the API will not hand
 # them out again. An imported tunnel carries neither, and the only way to get a
-# working credential for it is to issue a new one — which stops whatever is
+# working credential for it is to issue a new one, which stops whatever is
 # using the old.
 #
 # So import a tunnel when whatever runs it already has its credential.

@@ -21,8 +21,8 @@ import (
 )
 
 // The defaults of every endpoint the provider talks to. They are values rather
-// than constants baked into the request builders so that a second instance —
-// a staging identity provider, a local API — is an environment variable and not
+// than constants baked into the request builders so that a second instance
+// (a staging identity provider, a local API) is an environment variable and not
 // a release. They are not configurable from a Terraform configuration: see
 // clientConfig in internal/provider.
 const (
@@ -42,12 +42,12 @@ const (
 // and three of the four fail in silence:
 //
 //   - without the audience scope the `aud` becomes the username, and with it
-//     the role claim disappears — the token looks valid and every service
+//     the role claim disappears: the token looks valid and every service
 //     refuses everybody;
 //   - without urn:zitadel:iam:user:resourceowner there is no resourceowner:id,
 //     which is the claim the services resolve the account from;
-//   - without urn:zitadel:iam:org:projects:roles — "projects", PLURAL, matching
-//     neither of the two names the role claim itself goes by — the token comes
+//   - without urn:zitadel:iam:org:projects:roles ("projects", PLURAL, matching
+//     neither of the two names the role claim itself goes by), the token comes
 //     back with a correct audience, a correct resource owner and NO role claim
 //     at all, so the API refuses every request made with it. A token issued for
 //     a person carries the roles without asking; one issued for a machine does
@@ -130,7 +130,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		//
 		// oauth2 keeps the context it is built with and reuses it for every
 		// token fetch, but the one handed to the provider is cancelled the
-		// moment configuration returns — long before the first resource asks
+		// moment configuration returns, long before the first resource asks
 		// for anything. The result is every single call failing with "context
 		// canceled" on the *token endpoint*, which reads as "the identity
 		// provider is unreachable" and sends you to check DNS and firewalls.
@@ -168,7 +168,7 @@ type service struct {
 
 // do performs a request and decodes the answer.
 //
-// out may be nil, in which case the body is drained and discarded — which is
+// out may be nil, in which case the body is drained and discarded, which is
 // not the same as ignoring it: a connection whose body is never read cannot be
 // reused, and a provider makes a lot of small requests.
 func (s *service) do(ctx context.Context, method, path string, in, out any) error {

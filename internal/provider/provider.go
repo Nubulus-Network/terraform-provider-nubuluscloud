@@ -151,7 +151,7 @@ func (p *NubulusProvider) DataSources(ctx context.Context) []func() datasource.D
 // the configuration may carry, and the platform values, which it may not.
 //
 // The token endpoint, the project and the two API endpoints describe a hosted
-// service rather than a preference of whoever writes the configuration — there
+// service rather than a preference of whoever writes the configuration: there
 // is one production, and no other value for them is useful against it. So they
 // are not attributes of the provider block. That matters most for the token
 // endpoint, which is where the client id and secret are sent: a configuration

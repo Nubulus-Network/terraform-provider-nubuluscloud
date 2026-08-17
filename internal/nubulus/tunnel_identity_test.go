@@ -80,7 +80,7 @@ func TestCreateWithNoIdentitySendsAnEmptyObject(t *testing.T) {
 	}
 
 	if raw != "{}" {
-		t.Errorf("body = %s, want {} — an empty identity must not be sent as empty strings", raw)
+		t.Errorf("body = %s, want {}; an empty identity must not be sent as empty strings", raw)
 	}
 }
 
@@ -108,7 +108,7 @@ func TestRotateToken(t *testing.T) {
 
 // The lookup answers an empty list rather than a 404, so "there is none" must
 // come back as no tunnel and NO error. Treating it as a failure would turn the
-// ordinary case — asking before creating — into a broken apply.
+// ordinary case, asking before creating, into a broken apply.
 func TestFindTunnelByExternalID(t *testing.T) {
 	for _, tc := range []struct {
 		name      string

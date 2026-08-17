@@ -4,7 +4,7 @@ page_title: "nubuluscloud_dns_rrset Resource - nubuluscloud"
 subcategory: ""
 description: |-
   A DNS record set: every record that shares a name and a type.
-  The set is the unit and not the individual record, because that is what the DNS protocol operates on. Three A records on www are one nubuluscloud_dns_rrset with three values, never three resources — modelling them separately would have each apply race against the other two.
+  The set is the unit and not the individual record, because that is what the DNS protocol operates on. Three A records on www are one nubuluscloud_dns_rrset with three values, never three resources: modelling them separately would have each apply race against the other two.
   Writing records needs a token with the member role or above, and a zone that is active.
 ---
 
@@ -12,7 +12,7 @@ description: |-
 
 A DNS record **set**: every record that shares a name and a type.
 
-The set is the unit and not the individual record, because that is what the DNS protocol operates on. Three A records on `www` are one `nubuluscloud_dns_rrset` with three `values`, never three resources — modelling them separately would have each apply race against the other two.
+The set is the unit and not the individual record, because that is what the DNS protocol operates on. Three A records on `www` are one `nubuluscloud_dns_rrset` with three `values`, never three resources: modelling them separately would have each apply race against the other two.
 
 Writing records needs a token with the `member` role or above, and a zone that is `active`.
 
