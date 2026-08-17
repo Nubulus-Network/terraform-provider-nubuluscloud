@@ -1,30 +1,3 @@
-## Unreleased
-
-FEATURES:
-
-* **New resource:** `nubuluscloud_tunnel_route` — sends requests for a hostname,
-  optionally only those under a path, through a tunnel to an upstream reachable
-  from the machine running the tunnel client.
-
-  `type`, `hostname` and `path_prefix` replace the route when changed, because
-  the API has no way to edit them. Everything else — the upstream, `strip_prefix`,
-  `priority` and `enabled` — is updated in place.
-
-  Two of them cannot be set while the route is being created, which the provider
-  handles rather than passing on: a new route is always enabled, and a
-  `priority` of `0` is read as "unset" and stored as 100. A create that asked
-  for either issues the correcting update itself, so `enabled = false` and
-  `priority = 0` mean what they say instead of producing a permanent diff.
-
-  `hostname` is unique across the whole platform rather than per account, so a
-  collision is with somebody else's route and cannot be inspected or resolved
-  from your side. The error says so.
-
-* **New data source:** `nubuluscloud_tunnels` — the tunnels of the account,
-  optionally narrowed to one `external_id`. It never carries `tunnel_token` or
-  the WireGuard private key: those are issued once, at creation, and no read
-  returns them.
-
 ## 0.2.0 (17 de agosto de 2026)
 
 BREAKING CHANGES:
@@ -65,6 +38,29 @@ FEATURES:
     interrupted apply from a tunnel that is up and carrying traffic under the
     same identifier. `adopt_existing = true` takes it over and issues a new
     credential, which stops anything still running on the old one.
+
+* **New resource:** `nubuluscloud_tunnel_route` — sends requests for a hostname,
+  optionally only those under a path, through a tunnel to an upstream reachable
+  from the machine running the tunnel client.
+
+  `type`, `hostname` and `path_prefix` replace the route when changed, because
+  the API has no way to edit them. Everything else — the upstream, `strip_prefix`,
+  `priority` and `enabled` — is updated in place.
+
+  Two of them cannot be set while the route is being created, which the provider
+  handles rather than passing on: a new route is always enabled, and a
+  `priority` of `0` is read as "unset" and stored as 100. A create that asked
+  for either issues the correcting update itself, so `enabled = false` and
+  `priority = 0` mean what they say instead of producing a permanent diff.
+
+  `hostname` is unique across the whole platform rather than per account, so a
+  collision is with somebody else's route and cannot be inspected or resolved
+  from your side. The error says so.
+
+* **New data source:** `nubuluscloud_tunnels` — the tunnels of the account,
+  optionally narrowed to one `external_id`. It never carries `tunnel_token` or
+  the WireGuard private key: those are issued once, at creation, and no read
+  returns them.
 
 ENHANCEMENTS:
 
